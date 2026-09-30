@@ -1,9 +1,383 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Informações sobre preço — Lead Snare</title>
-<style>body{font-family:Arial,sans-serif;margin:0;padding:20px;color:#172033;line-height:1.6}h2{color:#145da0}.box{background:#f7f9fc;border:1px solid #dfe5ee;border-radius:12px;padding:18px}.small{color:#667085;font-size:13px}img{max-width:100%;height:auto;border-radius:10px}</style></head>
-<body><h2>Preço de venda</h2><div class="box">
-<p><b>Texto provisório.</b></p>
-<p>Use esta página para explicar a formação do preço de venda, as referências utilizadas, diferenças entre canais e demais premissas comerciais.</p>
-<p class="small">Este HTML pode ser editado diretamente no GitHub e pode receber imagens. Exemplo: <code>&lt;img src="preco.png"&gt;</code>.</p>
-</div></body></html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pesquisa de Preços — Bulldog Lead Extender</title>
+<style>
+  :root{
+    --navy:#102a43;
+    --blue:#1769aa;
+    --cyan:#1b9aaa;
+    --green:#16825d;
+    --gold:#b7791f;
+    --bg:#f4f7fb;
+    --card:#ffffff;
+    --text:#243447;
+    --muted:#66788a;
+    --line:#dce5ee;
+    --shadow:0 10px 28px rgba(16,42,67,.08);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:Inter,Segoe UI,Arial,sans-serif;
+    color:var(--text);
+    background:linear-gradient(180deg,#eef4f9 0,#f8fafc 260px,#f4f7fb 100%);
+  }
+  .wrap{max-width:1250px;margin:auto;padding:32px 22px 60px}
+  .hero{
+    background:linear-gradient(135deg,var(--navy),#1d4e72);
+    color:#fff;border-radius:24px;padding:34px 38px;
+    box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  .hero:after{
+    content:"";position:absolute;width:280px;height:280px;border-radius:50%;
+    right:-90px;top:-120px;background:rgba(255,255,255,.07);
+  }
+  .eyebrow{font-size:12px;letter-spacing:1.7px;text-transform:uppercase;opacity:.75;font-weight:700}
+  h1{margin:8px 0 8px;font-size:34px;line-height:1.15}
+  .hero p{margin:0;max-width:850px;color:#dcecf7;line-height:1.6}
+  .badge{
+    display:inline-block;margin-top:18px;padding:8px 12px;border-radius:999px;
+    background:rgba(255,255,255,.12);font-size:12px;font-weight:700
+  }
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px}
+  .metric{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:20px;box-shadow:var(--shadow)
+  }
+  .metric .label{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+  .metric .value{font-size:25px;font-weight:800;color:var(--navy);margin-top:8px}
+  .metric small{display:block;color:var(--muted);margin-top:6px;line-height:1.4}
+  section{
+    background:var(--card);border:1px solid var(--line);border-radius:20px;
+    margin-top:22px;padding:26px;box-shadow:var(--shadow)
+  }
+  h2{margin:0 0 7px;color:var(--navy);font-size:22px}
+  .sub{margin:0 0 18px;color:var(--muted);line-height:1.55}
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:900px}
+  th{
+    text-align:left;background:#edf4f8;color:#35536d;font-size:12px;
+    text-transform:uppercase;letter-spacing:.5px;padding:13px 12px;
+  }
+  td{padding:14px 12px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.45}
+  tr:last-child td{border-bottom:0}
+  .price{font-weight:800;color:var(--green);white-space:nowrap}
+  .tag{
+    display:inline-block;padding:5px 8px;border-radius:8px;font-size:11px;
+    font-weight:800;background:#e9f6f1;color:#126448
+  }
+  .tag.market{background:#eef3fb;color:#315b86}
+  .tag.historic{background:#fff4df;color:#8a5b14}
+  .note{
+    margin-top:16px;padding:15px 17px;border-left:4px solid var(--gold);
+    background:#fffaf0;border-radius:10px;color:#5e4a24;line-height:1.55
+  }
+  .source-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .source{
+    border:1px solid var(--line);border-radius:15px;padding:17px;background:#fbfdff
+  }
+  .source strong{display:block;color:var(--navy);margin-bottom:6px}
+  .source p{margin:0 0 10px;color:var(--muted);line-height:1.45;font-size:14px}
+  a.btn{
+    display:inline-block;text-decoration:none;color:#fff;background:var(--blue);
+    padding:9px 12px;border-radius:9px;font-size:12px;font-weight:800
+  }
+  a.btn:hover{filter:brightness(.92)}
+  .method{
+    display:grid;grid-template-columns:1.2fr .8fr;gap:18px
+  }
+  .method-card{
+    border:1px solid var(--line);border-radius:15px;padding:18px;background:#fbfdff
+  }
+  .method-card h3{margin:0 0 9px;color:var(--navy);font-size:16px}
+  .method-card p{margin:0;color:var(--muted);line-height:1.55}
+  .formula{
+    font-size:20px;font-weight:800;color:var(--green);
+    background:#eef9f5;border-radius:12px;padding:15px;text-align:center
+  }
+  .footer{
+    margin-top:22px;color:var(--muted);font-size:12px;line-height:1.6;text-align:center
+  }
+  @media(max-width:900px){
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .source-grid,.method{grid-template-columns:1fr}
+  }
+  @media(max-width:560px){
+    .wrap{padding:18px 12px 40px}
+    .hero{padding:25px 22px}
+    h1{font-size:27px}
+    .grid{grid-template-columns:1fr}
+    section{padding:20px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">Lead Snare • Pesquisa de mercado</div>
+    <h1>Bulldog™ Lead Extender</h1>
+    <p>
+      Levantamento de referências públicas de preço para o extensor de eletrodo
+      <strong>Cook Medical — G46542 / LR-LED01</strong>, incluindo registros de
+      licitações brasileiras e anúncios de mercado. Todos os valores apresentados
+      nesta página estão convertidos para reais utilizando a taxa fixa de
+      <strong>R$ 5,19</strong> por unidade monetária estrangeira.
+    </p>
+    <span class="badge">Referência: Bulldog Lead Extender • comprimento nominal 70 cm</span>
+  </header>
+
+  <div class="grid">
+    <div class="metric">
+      <div class="label">Referência nacional — licitações</div>
+      <div class="value">R$ 2.590,00</div>
+      <small>Menor valor homologado encontrado para o modelo/referência identificados.</small>
+    </div>
+    <div class="metric">
+      <div class="label">Maior valor nacional encontrado</div>
+      <div class="value">R$ 2.733,00</div>
+      <small>Valor homologado em pregão do HC-UFMG.</small>
+    </div>
+    <div class="metric">
+      <div class="label">Média das 3 licitações</div>
+      <div class="value">R$ 2.641,00</div>
+      <small>Média simples dos três valores nacionais identificados.</small>
+    </div>
+    <div class="metric">
+      <div class="label">Referência atual de mercado</div>
+      <div class="value">R$ 1.442,82</div>
+      <small>Anúncio de produto novo localizado em setembro de 2026.</small>
+    </div>
+  </div>
+
+  <section>
+    <h2>Quadro inicial — todos os valores encontrados</h2>
+    <p class="sub">
+      A tabela separa valores de licitação dos anúncios de mercado secundário.
+      Valores históricos ou de itens com validade expirada são mantidos como
+      referência de pesquisa, não como cotação comercial atual.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fonte / referência</th>
+            <th>Ano / data</th>
+            <th>Tipo</th>
+            <th>Quantidade</th>
+            <th>Valor unitário</th>
+            <th>Observação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Instituto Nacional de Cardiologia</strong><br>Pregão 00129/2021 — UASG 250059</td>
+            <td>Homologado em 18/04/2022</td>
+            <td><span class="tag">LICITAÇÃO</span></td>
+            <td>12 un.</td>
+            <td class="price">R$ 2.600,00</td>
+            <td>Item 1; descrição de extensor metálico de aproximadamente 70 cm. Marca Cook, G46542 / LR-LED01.</td>
+          </tr>
+          <tr>
+            <td><strong>Hospital das Forças Armadas</strong><br>Pregão 00098/2022 — UASG 112408</td>
+            <td>Homologado em 13/12/2022</td>
+            <td><span class="tag">LICITAÇÃO</span></td>
+            <td>5 un.</td>
+            <td class="price">R$ 2.590,00</td>
+            <td>Item 13; modelo identificado como Bulldog / LR-LED01 / G46542.</td>
+          </tr>
+          <tr>
+            <td><strong>Hospital das Clínicas de Minas Gerais — HC-UFMG</strong><br>Pregão 00063/2020 — UASG 155021</td>
+            <td>Homologado em 24/03/2021</td>
+            <td><span class="tag">LICITAÇÃO</span></td>
+            <td>60 un.</td>
+            <td class="price">R$ 2.733,00</td>
+            <td>Item 3; a listagem de marcas/modelos identifica o produto como Bulldog LR-LED01 / G46542.</td>
+          </tr>
+          <tr>
+            <td><strong>Synergy Surgical</strong><br>G46542 / LR-LED01</td>
+            <td>Pesquisa atual da página</td>
+            <td><span class="tag market">MERCADO</span></td>
+            <td>Por unidade</td>
+            <td class="price">R$ 1.163,86</td>
+            <td>Preço promocional publicado; a mesma página também informa preço de referência de R$ 1.551,81.</td>
+          </tr>
+          <tr>
+            <td><strong>DOTmed — listagem nº 5700850</strong><br>Cook Medical G46542</td>
+            <td>22/09/2026</td>
+            <td><span class="tag market">MERCADO</span></td>
+            <td>1 un.</td>
+            <td class="price">R$ 1.442,82</td>
+            <td>Produto anunciado como novo e disponível na data da listagem.</td>
+          </tr>
+          <tr>
+            <td><strong>DOTmed — listagem nº 5149525</strong><br>Cook G46542</td>
+            <td>15/07/2026</td>
+            <td><span class="tag historic">HISTÓRICO</span></td>
+            <td>1 un.</td>
+            <td class="price">R$ 181,65</td>
+            <td>Anúncio de produto novo, porém com data de validade informada como expirada; usar apenas como referência histórica.</td>
+          </tr>
+          <tr>
+            <td><strong>DOTmed — listagem nº 4862620</strong><br>Cook G46542</td>
+            <td>27/06/2026</td>
+            <td><span class="tag historic">HISTÓRICO</span></td>
+            <td>9 un.</td>
+            <td class="price">R$ 181,65</td>
+            <td>Anúncio de produto novo; a página informa validade expirada. Não utilizar isoladamente como preço comercial atual.</td>
+          </tr>
+          <tr>
+            <td><strong>DOTmed — listagem nº 2467477</strong><br>Cook G46542</td>
+            <td>28/06/2026</td>
+            <td><span class="tag historic">HISTÓRICO</span></td>
+            <td>9 un.</td>
+            <td class="price">R$ 207,60</td>
+            <td>Produto anunciado como novo, mas com validade expirada informada na própria listagem.</td>
+          </tr>
+          <tr>
+            <td><strong>Medical Materials</strong><br>Bulldog Lead Extender — LR-LED01</td>
+            <td>Página consultada em 2026</td>
+            <td><span class="tag historic">HISTÓRICO</span></td>
+            <td>Por unidade</td>
+            <td class="price">R$ 51,90</td>
+            <td>Página informa item fora de estoque; referência de anúncio, não de aquisição disponível.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <strong>Leitura recomendada:</strong> para uma estimativa comercial do Lead Snare,
+      os valores de licitação brasileira são mais diretamente comparáveis ao mercado
+      hospitalar nacional. Os anúncios internacionais/mercado secundário devem ser
+      tratados como referências complementares, pois podem envolver estoque antigo,
+      validade, condições de venda, frete, impostos e disponibilidade diferentes.
+    </div>
+  </section>
+
+  <section>
+    <h2>Referência das licitações brasileiras</h2>
+    <p class="sub">
+      Foram encontrados três registros em que o modelo/referência do Bulldog pode
+      ser identificado diretamente na documentação pública da contratação.
+    </p>
+
+    <div class="source-grid">
+      <div class="source">
+        <strong>Pregão 00129/2021 — Instituto Nacional de Cardiologia</strong>
+        <p>Homologado em 18/04/2022. Item 1: extensor para extração percutânea de eletrodo cardíaco, 70 cm. A marca/modelo ofertado é Cook G46542 / LR-LED01.</p>
+        <a class="btn" href="https://preguinho.ifrn.edu.br/?pregao=1292021&uasg=250059" target="_blank" rel="noopener">Abrir pesquisa</a>
+      </div>
+
+      <div class="source">
+        <strong>Pregão 00098/2022 — Hospital das Forças Armadas</strong>
+        <p>Homologado em 13/12/2022. Item 13: extensor metálico para extração percutânea de eletrodo cardíaco, cerca de 70 cm. A listagem identifica Bulldog / LR-LED01 / G46542.</p>
+        <a class="btn" href="https://preguinho.ifrn.edu.br/?pregao=982022&uasg=112408" target="_blank" rel="noopener">Abrir pesquisa</a>
+      </div>
+
+      <div class="source">
+        <strong>Pregão 00063/2020 — HC-UFMG</strong>
+        <p>Homologado em 24/03/2021. O item 3 possui valor homologado de R$ 2.733,00 e a listagem de modelos identifica o Bulldog LR-LED01 / G46542.</p>
+        <a class="btn" href="https://preguinho.ifrn.edu.br/?pregao=632020&uasg=155021" target="_blank" rel="noopener">Abrir pesquisa</a>
+      </div>
+
+      <div class="source">
+        <strong>Pesquisa oficial de preços — Compras.gov.br</strong>
+        <p>Portal público para consulta de preços de contratações públicas e referências de mercado. Pode ser usado para ampliar a pesquisa com outros termos e períodos.</p>
+        <a class="btn" href="https://pesquisaprecos.compras.gov.br/" target="_blank" rel="noopener">Pesquisar preços públicos</a>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Referências comerciais e técnicas</h2>
+    <p class="sub">
+      Links para confirmar produto, código, comprimento e referências de mercado.
+    </p>
+
+    <div class="source-grid">
+      <div class="source">
+        <strong>Cook Medical — Bulldog™ Lead Extender</strong>
+        <p>Fonte oficial do fabricante. Identifica G46542, LR-LED01 e comprimento de 70 cm.</p>
+        <a class="btn" href="https://www.cookmedical.com/products/vas_bulldog_webds/" target="_blank" rel="noopener">Ver fabricante</a>
+      </div>
+
+      <div class="source">
+        <strong>E. Tamussino — Bulldog™</strong>
+        <p>Distribuidor brasileiro com página específica do Bulldog e referência LR-LED01.</p>
+        <a class="btn" href="https://www.tamussino.com.br/en/bulldog-extensor-de-eletrodos" target="_blank" rel="noopener">Ver produto</a>
+      </div>
+
+      <div class="source">
+        <strong>Synergy Surgical — G46542</strong>
+        <p>Referência comercial encontrada para o mesmo código G46542 / LR-LED01.</p>
+        <a class="btn" href="https://www.synergysurgical.com/product/0-in-date/54-cook/832-lead-management/46344489-cook-bulldog-lead-extender-70cm-G46542/" target="_blank" rel="noopener">Ver anúncio</a>
+      </div>
+
+      <div class="source">
+        <strong>DOTmed — G46542</strong>
+        <p>Marketplace médico com diferentes listagens do mesmo produto, útil para ampliar a pesquisa de mercado.</p>
+        <a class="btn" href="https://pt.dotmed.com/listing/disposables-general/cook-medical/g46542/bulldog-lead-extender-70-cm-length-in-date/5700850" target="_blank" rel="noopener">Ver listagem</a>
+      </div>
+
+      <div class="source">
+        <strong>Medical Materials — LR-LED01</strong>
+        <p>Página comercial histórica do Bulldog Lead Extender, referência G46542.</p>
+        <a class="btn" href="https://medicalmaterials.com/miscellaneous/bulldog-lead-extender-70cm/" target="_blank" rel="noopener">Ver referência</a>
+      </div>
+
+      <div class="source">
+        <strong>AccessGUDID — identificação do dispositivo</strong>
+        <p>Base regulatória dos EUA que identifica Bulldog, G46542 e LR-LED01.</p>
+        <a class="btn" href="https://accessgudid.nlm.nih.gov/devices/search?filters%5BCompany+Name%5D%5B%5D=Cook+Vandergrift+Inc.&filters%5BImplantable%5D%5B%5D=0&letter=C&option=Company+Name&page=1&query=1.cor" target="_blank" rel="noopener">Ver registro</a>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Critério de conversão</h2>
+    <div class="method">
+      <div class="method-card">
+        <h3>Taxa adotada para esta pesquisa</h3>
+        <p>
+          Para padronizar os anúncios internacionais, foi utilizada a taxa fixa
+          informada no projeto: <strong>R$ 5,19 por unidade de moeda estrangeira</strong>.
+          Os valores estrangeiros não são exibidos nesta página; somente o resultado
+          convertido para reais é apresentado.
+        </p>
+      </div>
+      <div class="method-card">
+        <h3>Exemplo de cálculo</h3>
+        <div class="formula">valor convertido = valor de origem × 5,19</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Interpretação para o Lead Snare</h2>
+    <p class="sub">
+      O conjunto de referências mostra que o Bulldog G46542 / LR-LED01 aparece em
+      contratações públicas brasileiras na faixa de <strong>R$ 2.590,00 a R$ 2.733,00</strong>
+      por unidade nos registros identificados. A média simples desses três registros
+      é <strong>R$ 2.641,00</strong>.
+    </p>
+    <p class="sub">
+      Esse intervalo pode ser utilizado como uma referência de mercado hospitalar
+      para estudos preliminares do Lead Snare, mas não deve ser interpretado como
+      preço de venda atual garantido: cada contratação possui data, quantidade,
+      fornecedor, condições comerciais, impostos, logística e regras próprias.
+    </p>
+  </section>
+
+  <div class="footer">
+    Pesquisa elaborada para referência de desenvolvimento e análise de mercado.
+    Os valores e condições devem ser confirmados na fonte original antes de qualquer
+    decisão comercial, regulatória ou financeira.
+  </div>
+</div>
+</body>
+</html>
