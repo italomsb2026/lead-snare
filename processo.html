@@ -1,9 +1,270 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Processo produtivo — Lead Snare</title>
-<style>body{font-family:Arial,sans-serif;margin:0;padding:20px;color:#172033;line-height:1.55}h2{color:#145da0}.box{background:#f7f9fc;border:1px solid #dfe5ee;border-radius:12px;padding:16px}img{display:block;width:100%;max-height:55vh;object-fit:contain;border-radius:10px;margin:14px 0}.small{color:#667085;font-size:13px}</style></head>
-<body><h2>Processo produtivo</h2><div class="box">
-<p>Texto provisório. Edite este arquivo diretamente no GitHub para colocar a descrição definitiva do processo produtivo.</p>
-<img src="prod.png" alt="Possível linha de produção do Lead Snare">
-<p class="small">Para trocar a imagem, substitua <b>prod.png</b>, mantendo o mesmo nome.</p>
-</div></body></html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Processo Produtivo — Lead Snare</title>
+
+  <style>
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      padding:28px;
+      font-family:Arial, Helvetica, sans-serif;
+      color:#172033;
+      background:#ffffff;
+      line-height:1.55;
+    }
+
+    .container{
+      max-width:1050px;
+      margin:0 auto;
+    }
+
+    h1{
+      margin:0 0 8px;
+      color:#145da0;
+      font-size:30px;
+    }
+
+    .intro{
+      margin:0 0 24px;
+      color:#667085;
+      font-size:15px;
+    }
+
+    .process{
+      display:grid;
+      grid-template-columns:repeat(2, 1fr);
+      gap:18px;
+    }
+
+    .step{
+      border:1px solid #dfe5ee;
+      border-radius:16px;
+      padding:20px;
+      background:#f8fafc;
+      position:relative;
+    }
+
+    .step-number{
+      width:38px;
+      height:38px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#145da0;
+      color:white;
+      font-weight:700;
+      margin-bottom:12px;
+    }
+
+    .step h2{
+      margin:0 0 8px;
+      font-size:19px;
+      color:#172033;
+    }
+
+    .step p{
+      margin:0;
+      font-size:14px;
+    }
+
+    .highlight{
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:10px;
+      background:#eef6ff;
+      border-left:4px solid #145da0;
+      font-size:13px;
+    }
+
+    .full{
+      grid-column:1 / -1;
+    }
+
+    .image-box{
+      margin-top:20px;
+      border:1px solid #dfe5ee;
+      border-radius:16px;
+      padding:14px;
+      background:#fff;
+    }
+
+    .image-box img{
+      display:block;
+      width:100%;
+      max-height:430px;
+      object-fit:contain;
+      border-radius:10px;
+    }
+
+    .caption{
+      margin:9px 2px 0;
+      color:#667085;
+      font-size:12px;
+      text-align:center;
+    }
+
+    .final{
+      margin-top:20px;
+      padding:18px;
+      border-radius:16px;
+      background:#f3f6f9;
+      border:1px solid #dfe5ee;
+    }
+
+    .final h2{
+      margin:0 0 8px;
+      color:#145da0;
+      font-size:20px;
+    }
+
+    .final p{
+      margin:0;
+      font-size:14px;
+    }
+
+    @media(max-width:760px){
+      body{padding:18px}
+      .process{grid-template-columns:1fr}
+      .full{grid-column:auto}
+      h1{font-size:25px}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <h1>Processo Produtivo — Lead Snare</h1>
+
+    <p class="intro">
+      O processo produtivo foi estruturado para uma fabricação em pequena quantidade,
+      priorizando controle do processo, montagem adequada, redução do risco de
+      contaminação cruzada e preparação do produto para transporte final.
+    </p>
+
+    <div class="process">
+
+      <section class="step">
+        <div class="step-number">1</div>
+        <h2>Torção dos cabos</h2>
+        <p>
+          A primeira etapa consiste na montagem e torção dos cabos em uma
+          <strong>máquina de torção de cabos</strong>. O equipamento realiza a
+          conformação controlada do conjunto, garantindo repetibilidade do processo
+          e padronização da geometria do produto.
+        </p>
+        <div class="highlight">
+          A utilização de uma máquina dedicada permite manter o processo de torção
+          padronizado mesmo em uma produção de pequena escala.
+        </div>
+      </section>
+
+      <section class="step">
+        <div class="step-number">2</div>
+        <h2>Fabricação do apoio em resina biocompatível</h2>
+        <p>
+          O apoio utilizado no conjunto será produzido por impressão 3D utilizando
+          <strong>resina biocompatível</strong>, conforme a especificação definida
+          para o produto.
+        </p>
+        <div class="highlight">
+          A fabricação do apoio em resina permite produzir pequenas quantidades
+          com flexibilidade, sem a necessidade de um ferramental dedicado de alto
+          investimento para cada alteração de projeto.
+        </div>
+      </section>
+
+      <section class="step full">
+        <div class="step-number">3</div>
+        <h2>Bancada de montagem e controle de contaminação</h2>
+        <p>
+          A montagem dos componentes será realizada em uma
+          <strong>bancada com materiais e condições compatíveis com a fabricação
+          do produto</strong>, mantendo uma área organizada e dedicada ao processo.
+          Essa configuração é importante para reduzir o risco de
+          <strong>contaminação cruzada</strong> entre o Lead Snare e outros produtos,
+          materiais ou atividades realizadas no ambiente produtivo.
+        </p>
+        <div class="highlight">
+          Para uma produção de pequena quantidade, a utilização de uma bancada
+          dedicada e controlada contribui para manter a separação dos materiais,
+          organizar o fluxo de montagem e preservar as condições necessárias
+          durante a fabricação.
+        </div>
+      </section>
+
+      <section class="step">
+        <div class="step-number">4</div>
+        <h2>Montagem final</h2>
+        <p>
+          Após a preparação dos cabos e do apoio, os componentes são unidos na
+          <strong>montagem final do Lead Snare</strong>. Nesta etapa é realizada
+          a conferência do conjunto e da configuração final antes da embalagem.
+        </p>
+      </section>
+
+      <section class="step">
+        <div class="step-number">5</div>
+        <h2>Embalagem em Tyvek</h2>
+        <p>
+          Após a montagem e inspeção, cada produto é acondicionado em embalagem
+          de <strong>Tyvek</strong>, preparando o conjunto para a etapa seguinte
+          do processo.
+        </p>
+        <div class="highlight">
+          A embalagem individual facilita a identificação, o manuseio e a
+          preparação dos produtos para esterilização.
+        </div>
+      </section>
+
+      <section class="step">
+        <div class="step-number">6</div>
+        <h2>Esterilização</h2>
+        <p>
+          Os produtos embalados seguem para a <strong>esterilização</strong>,
+          de acordo com o método e os parâmetros definidos para o produto e para
+          o sistema de embalagem.
+        </p>
+      </section>
+
+      <section class="step">
+        <div class="step-number">7</div>
+        <h2>Embalagem para transporte final</h2>
+        <p>
+          Como a expectativa é de uma produção em pequena quantidade, cada produto
+          poderá ser acondicionado individualmente em uma <strong>caixa de
+          transporte semelhante à utilizada para produtos Basket</strong>,
+          permitindo que o produto já siga preparado para o transporte final.
+        </p>
+        <div class="highlight">
+          Dessa forma, evita-se a necessidade de uma etapa adicional de
+          acondicionamento após a esterilização, simplificando o fluxo logístico.
+        </div>
+      </section>
+
+    </div>
+
+    <div class="image-box">
+      <img src="prod.png" alt="Representação da possível linha de produção do Lead Snare">
+      <div class="caption">
+        Representação da possível estrutura produtiva do Lead Snare.
+      </div>
+    </div>
+
+    <div class="final">
+      <h2>Fluxo resumido</h2>
+      <p>
+        <strong>Torção dos cabos → Impressão do apoio em resina biocompatível →
+        Montagem em bancada controlada → Montagem final → Tyvek →
+        Esterilização → Caixa para transporte final.</strong>
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>
