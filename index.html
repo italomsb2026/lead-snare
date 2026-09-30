@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead Snare — Viabilidade do Projeto</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+:root{
+  --bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#dfe5ee;
+  --primary:#145da0;--primary2:#0d4678;--green:#16794a;--red:#b42318;--soft:#eef6ff
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--ink)}
+header{background:linear-gradient(135deg,#0d4678,#1976b9);color:#fff;padding:20px 28px}
+.header-inner{max-width:1180px;margin:auto}
+.brand h1{margin:0;font-size:24px}.brand p{margin:5px 0 0;opacity:.85;font-size:13px}
+.container{max-width:1180px;margin:24px auto;padding:0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:20px;margin-bottom:18px;box-shadow:0 5px 18px rgba(25,45,75,.05)}
+h2{font-size:17px;margin:0 0 15px}h3{font-size:14px;margin:0 0 10px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.grid5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff}
+.kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase}
+.kpi .v{font-size:21px;font-weight:850;margin-top:5px}
+.mode-buttons{display:flex;gap:10px}
+.mode-btn{flex:1;padding:13px;border:1px solid var(--line);border-radius:10px;background:#f7f9fc;color:#344054;font-weight:700;cursor:pointer}
+.mode-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+label{font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px}
+input[type=number]{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:15px}
+.small{font-size:11px;color:var(--muted)}
+.badge{display:inline-block;border-radius:999px;padding:5px 12px;font-size:13px;font-weight:800}
+.badge-green{background:#e9f8f0;color:var(--green)}.badge-red{background:#fdecec;color:var(--red)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-size:10.5px;text-transform:uppercase}
+tr.tot td{font-weight:900;background:var(--soft);color:var(--primary2)}
+canvas{width:100%;height:220px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.scenario-title{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+.chip{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff}
+.chip.ext{background:#1976b9}.chip.int{background:#16794a}
+.comp-col{border:1px solid var(--line);border-radius:13px;padding:16px}
+.comp-col.ext{border-top:4px solid #1976b9}.comp-col.int{border-top:4px solid #16794a}
+details{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:#fafcff}
+details summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--primary2)}
+.assump{font-size:12px;color:var(--muted);line-height:1.7;margin-top:8px}
+@media(max-width:760px){.grid2,.grid3,.grid5{grid-template-columns:1fr}.mode-buttons{flex-direction:column}}
+.modal-bg{position:fixed;inset:0;background:rgba(16,24,40,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal-box{background:#fff;border-radius:16px;padding:26px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-box h3{margin:0 0 6px}
+.modal-box input{width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;font-size:16px;margin:12px 0 6px;letter-spacing:1px}
+.modal-box button{width:100%;padding:11px;border:none;border-radius:9px;background:var(--primary);color:#fff;font-weight:800;cursor:pointer;font-size:14px}
+.modal-err{color:var(--red);font-size:12.5px;min-height:16px;margin-bottom:2px}
+.hidden{display:none!important}
+
+.top-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.top-btn{border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.14);color:#fff;border-radius:10px;padding:10px 13px;cursor:pointer;font-weight:750}.top-btn:hover{background:rgba(255,255,255,.22)}
+.auth-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0d4678,#1976b9);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}.auth-box{background:#fff;width:min(420px,100%);border-radius:18px;padding:30px;box-shadow:0 25px 80px rgba(0,0,0,.28)}.auth-logo{display:block;width:180px;max-width:75%;height:auto;margin:0 auto 20px;object-fit:contain}.password-wrap{position:relative;margin:10px 0}.password-wrap input{margin:0;padding-right:48px}.toggle-password{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:38px!important;height:38px!important;padding:0!important;border:0!important;background:transparent!important;color:#667085!important;font-size:19px!important;display:flex;align-items:center;justify-content:center;cursor:pointer}.toggle-password:hover{color:#145da0!important}.auth-box .login-note{display:none}.auth-box h2{margin-bottom:6px}.auth-box input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:16px;margin:10px 0}.auth-box button{width:100%;padding:12px;border:0;border-radius:10px;background:var(--primary);color:#fff;font-weight:800;font-size:14px;cursor:pointer}.auth-err{color:var(--red);min-height:18px;font-size:12px;margin:4px 0 8px}.user-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.14);font-size:12px}.admin-card{border-left:4px solid #145da0}.admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.file-card{border:1px solid var(--line);border-radius:13px;padding:16px;background:#fff}.file-card h3{font-size:15px;margin-bottom:7px}.file-meta{font-size:12px;color:var(--muted);line-height:1.7}.action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 12px;border-radius:9px;cursor:pointer;font-weight:750;font-size:12px}.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}.btn.danger{color:var(--red)}.btn:disabled{opacity:.5;cursor:not-allowed}.history{margin-top:12px}.history table th,.history table td{text-align:left}.status-ok{color:var(--green);font-weight:800}.status-warn{color:#b54708;font-weight:800}.report-toolbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px}.report-capture{background:var(--bg)}
+@media(max-width:760px){.admin-grid{grid-template-columns:1fr}.top-actions{justify-content:flex-start}}
+
+.prod-btn{border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.14);color:#fff;border-radius:10px;padding:10px 13px;cursor:pointer;font-weight:750}
+.prod-btn:hover{background:rgba(255,255,255,.22)}
+.modal-wide{max-width:900px!important;padding:18px!important}
+.prod-image{display:block;width:100%;max-height:72vh;object-fit:contain;border-radius:10px;background:#f4f7fb}
+.note-trigger{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-left:6px;border:0;border-radius:50%;background:#145da0;color:#fff;font-weight:900;font-size:12px;cursor:pointer;vertical-align:middle}
+.note-trigger:hover{background:#0d4678}
+.note-modal-text{white-space:pre-wrap;line-height:1.6;font-size:14px;color:#344054;background:#f8fafc;border:1px solid #dfe5ee;border-radius:10px;padding:14px;min-height:100px}
+.modal-close{margin-top:12px;background:#667085!important}
+</style>
+</head><body><div id="authScreen" class="auth-screen">
+  <div class="auth-box">
+    <img class="auth-logo" src="logo-msb.png" alt="MSB Medical System do Brasil">
+    <h2>Lead Snare — Acesso</h2>
+    <div class="small">Digite sua senha para acessar o aplicativo.</div>
+    <div class="password-wrap">
+      <input id="loginPassword" type="password" placeholder="Senha" autocomplete="current-password">
+      <button id="togglePassword" class="toggle-password" type="button" aria-label="Mostrar senha" title="Mostrar senha">◉</button>
+    </div>
+    <div id="loginErr" class="auth-err"></div>
+    <div id="loginDiag" style="display:none;margin:8px 0 10px;padding:9px 10px;border:1px solid #f0b8b8;border-radius:8px;background:#fff5f5;color:#7a1f1f;font-size:10px;line-height:1.55;word-break:break-word"></div>
+    <button id="loginBtn">Entrar</button>
+  </div>
+</div>
+
+<header><div class="header-inner" style="display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap">
+  <div class="brand">
+    <h1>Lead Snare — Viabilidade do Projeto</h1>
+  </div>
+  <div style="text-align:right">
+    <div class="top-actions">
+      <span id="userPill" class="user-pill">● não conectado</span>
+      <button id="downloadIntTop" class="top-btn hidden">⬇ Excel Interna</button>
+      <button id="prodLineTop" class="prod-btn hidden">⚙ Linha de produção</button>
+      <button id="pngTop" class="top-btn hidden">▣ Exportar PNG</button>
+      <button id="logoutBtn" class="top-btn hidden">Sair</button>
+    </div>
+    <div id="loadStatus" class="small" style="color:#fff;opacity:.9;margin-top:8px">Conectando ao Supabase…</div>
+  </div>
+</div></header>
+
+<div class="container">
+  <div id="adminPanel" class="card admin-card hidden">
+    <h2>Administração da planilha</h2>
+    <div class="small" style="margin-bottom:14px">O administrador carrega o Excel original do Lead Snare. O arquivo inteiro é salvo no Storage; o aplicativo lê uma cópia em memória para fazer os cálculos. O Excel original não é alterado.</div>
+    <div class="admin-grid" style="grid-template-columns:1fr">
+      <div class="file-card">
+        <h3>Produção Interna</h3>
+        <div id="adminIntMeta" class="file-meta">Nenhuma versão carregada.</div>
+        <div class="action-row">
+          <button id="adminUploadInt" class="btn primary">⬆ Carregar Excel original</button>
+          <button id="adminDownloadInt" class="btn">⬇ Baixar Excel original</button>
+        </div>
+        <div id="historyInt" class="history"></div>
+      </div>
+    </div>
+    <input type="file" id="fileInterna" accept=".xlsx" class="hidden">
+  </div>
+
+  <div id="emptyState" class="card" style="text-align:center;padding:40px 20px">
+    <h2 style="margin-bottom:8px">Aguardando a planilha</h2>
+    <div class="small">O administrador precisa ter uma versão Interna do Lead Snare cadastrada no Supabase.</div>
+  </div>
+
+  <div id="appContent" class="hidden report-capture">
+    <div class="report-toolbar">
+      <button id="downloadCurrentExcel" class="btn">⬇ Baixar Excel desta simulação</button>
+      <button id="exportPng" class="btn primary">▣ Exportar viabilidade em PNG</button>
+    </div>
+
+    <div class="card">
+      <h2>Parâmetros de simulação</h2>
+      <div class="small" style="margin-bottom:14px">Estes parâmetros são aplicados às duas estruturas de custo (interna e externa), para comparar o mesmo cenário de mercado.</div>
+      <div class="grid3">
+        <div><label>Preço de venda (R$/un)</label><input id="inPrice" type="number" min="0" step="0.01" value="20"></div>
+        <div><label>Quantidade vendida no Ano 1 (un)<button id="qtyNoteBtn" class="note-trigger" type="button" title="Ver nota">i</button></label><input id="inQty1" type="number" min="0" step="1" value="1000"></div>
+      </div>
+      <div class="small" style="margin:14px 0 6px">Crescimento (ou retração, com valor negativo) de cada ano em relação ao anterior:</div>
+      <div class="grid5">
+        <div><label>Ano 2 (%)</label><input id="inG2" type="number" step="0.1" value="50"></div>
+        <div><label>Ano 3 (%)</label><input id="inG3" type="number" step="0.1" value="50"></div>
+        <div><label>Ano 4 (%)</label><input id="inG4" type="number" step="0.1" value="50"></div>
+        <div><label>Ano 5 (%)</label><input id="inG5" type="number" step="0.1" value="50"></div>
+        <div><label>Ano 6 (%)</label><input id="inG6" type="number" step="0.1" value="50"></div>
+      </div>
+      <div class="small" style="margin:14px 0 6px">Coeficiente de custo — multiplica CAPEX, custo unitário e OPEX das duas planilhas.</div>
+      <div class="grid3"><div><label>Coeficiente de custo</label><input id="inCoef" type="number" min="0" step="0.01" value="1"></div></div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0">Produção Interna</h2>
+    </div>
+
+    <div id="singleView"></div>
+
+    <div class="card">
+      <details><summary>Premissas lidas da planilha (referência)</summary><div class="assump" id="assumpBox"></div></details>
+    </div>
+  </div>
+</div>
+<!-- Popup da linha de produção -->
+<div id="productionModal" class="modal-bg hidden">
+  <div class="modal-box modal-wide">
+    <h3>Linha de produção — Lead Snare</h3>
+    <div class="small" style="margin-bottom:10px">Imagem provisória. Substitua o arquivo <b>prod.png</b> no GitHub pela imagem definitiva.</div>
+    <img class="prod-image" src="prod.png" alt="Possível linha de produção do Lead Snare">
+    <button class="modal-close" type="button" onclick="closeProductionPopup()">Fechar</button>
+  </div>
+</div>
+
+<!-- Popup da nota da quantidade -->
+<div id="quantityNoteModal" class="modal-bg hidden">
+  <div class="modal-box">
+    <h3>Nota sobre a quantidade vendida</h3>
+    <div id="quantityNoteText" class="note-modal-text">Carregando nota…</div>
+    <button class="modal-close" type="button" onclick="closeQuantityNote()">Fechar</button>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://kpeokojnjrmqwxlloxkd.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__LFPP1tXF-PP55TQSGwy9g_FLwaxao1";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const STORAGE_BUCKET = "leadsnare";
+const STORAGE_FOLDER = "interna";
+const ADMIN_EMAIL = "admin@msb.local";
+const USER_EMAIL = "biblioteca@msb.local";
+let currentUser = null, currentRole = null;
+let FILES = { interna:null, externa:null };
+let EXTERNA = null, INTERNA = null;
+
+/* ========== LEITURA DAS PLANILHAS (.xlsx) — SheetJS ==========
+   Lê os mesmos endereços de célula das planilhas rev00 F-PJ-028. */
+function cellNum(wb, sheet, addr, fallback){
+  const ws = wb.Sheets[sheet];
+  if(!ws) return fallback!==undefined?fallback:0;
+  const c = ws[addr];
+  const v = c ? c.v : undefined;
+  return (typeof v === "number" && isFinite(v)) ? v : (fallback!==undefined?fallback:0);
+}
+function parseWorkbook(wb, label){
+  const unitCost = cellNum(wb,'Sumário de Custo Ideal','J4');
+  const capexInicial = cellNum(wb,'CAPEX','I34');
+  const cols=['C','D','E','F','G','H','I','J','K','L','M','N','O'];
+  const processes=[];
+  cols.forEach(col=>{
+    const ws = wb.Sheets['Breakdown Processos e MOD'];
+    if(!ws) return;
+    const mod = ws[col+'6'] ? ws[col+'6'].v : undefined;
+    const cap = ws[col+'22'] ? ws[col+'22'].v : undefined;
+    const desc = ws[col+'3'] ? ws[col+'3'].v : '';
+    if(typeof mod==='number' && mod>0 && typeof cap==='number' && isFinite(cap) && cap>0){
+      processes.push({ nome: desc || ('Processo '+col), mod, cap });
+    }
+  });
+  const price = cellNum(wb,'Receita','D19',20);
+  const qty1 = cellNum(wb,'Receita','D12',0);
+  const growth = cellNum(wb,'Receita','E13',0);
+  const wacc = cellNum(wb,'EV','C10',0.20475);
+  const g = cellNum(wb,'EV','C11',0);
+  const devolucaoRate = cellNum(wb,'EV','C18',0);
+  const ipi = cellNum(wb,'Impostos','C16',0);
+  const icms = cellNum(wb,'Impostos','C17',0);
+  const pis = cellNum(wb,'Impostos','C18',0);
+  const cofins = cellNum(wb,'Impostos','C19',0);
+  const irRate = cellNum(wb,'Impostos','C22',0);
+  const csllRate = cellNum(wb,'Impostos','C23',0);
+  const importUnit = cellNum(wb,'OPEX','C17',0);
+  const desembaracoUnit = cellNum(wb,'OPEX','C18',0);
+  const comissao = cellNum(wb,'OPEX','C19',0);
+  const frete = cellNum(wb,'OPEX','C20',0);
+  const embalagem = cellNum(wb,'OPEX','C21',0);
+  const royalties = cellNum(wb,'OPEX','C22',0);
+  const descontos = cellNum(wb,'OPEX','C23',0);
+  const salarioBase = cellNum(wb,'OPEX','D28',1800);
+  const reajuste = cellNum(wb,'OPEX','D29',0.06);
+  const mesesVenda = cellNum(wb,'OPEX','D32',12);
+  const diasRecebimento = cellNum(wb,'NCG','D26',90);
+  const diasEstoque = cellNum(wb,'NCG','D27',60);
+  const diasPagamento = cellNum(wb,'NCG','D28',0);
+  return {
+    label, unitCost, capexInicial, processes, salarioBase, reajuste,
+    inssRate:0.268, fgtsRate:0.08, mesesVenda, devolucaoRate,
+    taxRates: { ipi, icms, pis, cofins }, irRate, csllRate,
+    opexVar: { importUnit, desembaracoUnit, comissao, frete, embalagem, royalties, descontos },
+    wacc, g, diasRecebimento, diasEstoque, diasPagamento,
+    defaults: { price, qty1, growth }
+  };
+}
+function readWorkbookFile(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      try{
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type:"array"});
+        resolve(wb);
+      }catch(err){ reject(err); }
+    };
+    reader.onerror = ()=>reject(new Error("Falha ao ler o arquivo"));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function fmtDate(v){return v?new Date(v).toLocaleString('pt-BR'):'';}
+function fileSize(n){if(!n)return ''; const u=['B','KB','MB','GB']; let i=0,x=n; while(x>=1024&&i<u.length-1){x/=1024;i++;} return `${x.toFixed(i?1:0)} ${u[i]}`;}
+function roleLabel(){return currentRole==='admin'?'Administrador':'Usuário';}
+function setStatus(msg){document.getElementById('loadStatus').textContent=msg;}
+
+function xround(v,d){ d=d||0; const f=Math.pow(10,d); return Math.sign(v)*Math.round(Math.abs(v)*f)/f; }
+
+function irr(cf){
+  function npv(r){ let s=0; for(let t=0;t<cf.length;t++) s+=cf[t]/Math.pow(1+r,t); return s; }
+  let lo=-0.9, hi=10;
+  if(npv(lo)*npv(hi)>0){
+    let found=false;
+    for(let r=-0.9;r<10;r+=0.01){ if(npv(r)*npv(r+0.01)<=0){lo=r;hi=r+0.01;found=true;break;} }
+    if(!found) return NaN;
+  }
+  for(let i=0;i<100;i++){
+    const mid=(lo+hi)/2, fm=npv(mid);
+    if(Math.abs(fm)<1e-6) return mid;
+    if(npv(lo)*fm<0) hi=mid; else lo=mid;
+  }
+  return (lo+hi)/2;
+}
+function mirr(cf, financeRate, reinvestRate){
+  const n=cf.length-1;
+  let pvNeg=0, fvPos=0;
+  for(let t=0;t<cf.length;t++){
+    if(cf[t]<0) pvNeg += cf[t]/Math.pow(1+financeRate,t);
+    else fvPos += cf[t]*Math.pow(1+reinvestRate,(n-t));
+  }
+  if(pvNeg===0) return NaN;
+  return Math.pow(fvPos/-pvNeg,1/n)-1;
+}
+
+function computeModel(ds, inputs){
+  const price = Math.max(inputs.price,0);
+  const qty1 = Math.max(inputs.qty1,0);
+  const growth = inputs.growth;
+
+  const qty={}, rev={}, dev={}, revCom={}, taxTotal={}, ROL={};
+  const CMV={}, outrosVar={}, gastoVar={}, contrib={};
+  const headcount={}, salario={}, gastoFixo={};
+  const EBITDA={}, LAIR={}, IR={}, CSLL={}, lucro={};
+
+  for(let y=1;y<=6;y++) qty[y] = y===1 ? qty1 : qty[y-1]*(1+growth[y-2]);
+
+  for(let y=1;y<=6;y++){
+    rev[y]=qty[y]*price;
+    dev[y]=rev[y]*ds.devolucaoRate;
+    revCom[y]=rev[y]-dev[y];
+    const ipi=xround(ds.taxRates.ipi*revCom[y],0);
+    const icms=xround(ds.taxRates.icms*revCom[y],0);
+    const pis=xround(ds.taxRates.pis*revCom[y],0);
+    const cofins=xround(ds.taxRates.cofins*revCom[y],0);
+    taxTotal[y]=ipi+icms+pis+cofins;
+    ROL[y]=revCom[y]-taxTotal[y];
+
+    CMV[y]=qty[y]*ds.unitCost;
+    outrosVar[y]= ds.opexVar.importUnit*qty[y] + ds.opexVar.desembaracoUnit*qty[y] +
+                  ds.opexVar.comissao*ROL[y] + ds.opexVar.frete*ROL[y] +
+                  ds.opexVar.embalagem*ROL[y] + ds.opexVar.royalties*ROL[y] +
+                  ds.opexVar.descontos*ROL[y];
+    gastoVar[y]=CMV[y]+outrosVar[y];
+    contrib[y]=ROL[y]-gastoVar[y];
+
+    let sum=0;
+    ds.processes.forEach(p=>{
+      const t = xround(p.mod*qty[y]/p.cap,2)/200;
+      if(isFinite(t)) sum+=t;
+    });
+    headcount[y]=sum/12;
+
+    salario[y] = y===1 ? ds.salarioBase : salario[y-1]*(1+ds.reajuste);
+    const inss = salario[y]*ds.inssRate;
+    const fgts = salario[y]*ds.fgtsRate;
+    const salarioAnual = (salario[y]+inss+fgts)*ds.mesesVenda;
+    const umTercoFerias = salario[y]/12*ds.mesesVenda;
+    const inss13Ferias = umTercoFerias*ds.inssRate;
+    const decTerceiro = salario[y]/12*ds.mesesVenda;
+    const inss13 = decTerceiro*ds.inssRate;
+    const fgts13 = decTerceiro*ds.fgtsRate;
+    const perPerson = salarioAnual+umTercoFerias+inss13Ferias+decTerceiro+inss13+fgts13;
+    gastoFixo[y]=perPerson*headcount[y];
+
+    EBITDA[y]=contrib[y]-gastoFixo[y];
+    LAIR[y]=EBITDA[y];
+    let ir=xround(ds.irRate*LAIR[y],0); if(ir<0) ir=0;
+    let csll=xround(ds.csllRate*LAIR[y],0); if(csll<0) csll=0;
+    IR[y]=ir; CSLL[y]=csll;
+    lucro[y]=LAIR[y]-ir-csll;
+  }
+
+  const avgQty=(qty[1]+qty[2]+qty[3]+qty[4]+qty[5]+qty[6])/6;
+  const avgROL=(ROL[1]+ROL[2]+ROL[3]+ROL[4]+ROL[5]+ROL[6])/6;
+  const E26=avgQty/12*ds.diasRecebimento/30;
+  const PMR= avgROL!==0 ? xround((E26*price)/avgROL*360,0) : 0;
+  const E27=avgQty/12*ds.diasEstoque/30;
+  const PME= avgROL!==0 ? xround((E27*ds.unitCost)/avgROL*360,0) : 0;
+  const PMP=0; // dias de pagamento a fornecedor = 0 no modelo original
+
+  const NCG={0:0};
+  for(let y=1;y<=6;y++) NCG[y]= ROL[y]*PMR/360 + ROL[y]*PME/360 - ROL[y]*PMP/360;
+  const varNCG={};
+  for(let y=1;y<=6;y++) varNCG[y]=NCG[y]-NCG[y-1];
+
+  const FDCsemPerp={0:-ds.capexInicial};
+  for(let y=1;y<=6;y++) FDCsemPerp[y]=lucro[y]-varNCG[y];
+
+  const perpetuidade = (ds.wacc-ds.g)!==0 ? FDCsemPerp[6]/(ds.wacc-ds.g) : 0;
+
+  const FDCcomPerp={};
+  for(let y=0;y<=4;y++) FDCcomPerp[y]=FDCsemPerp[y];
+  FDCcomPerp[5]=FDCsemPerp[5]+perpetuidade;
+
+  const discFactor={}, FDCdesc={}, cum={};
+  for(let y=0;y<=5;y++){
+    discFactor[y]=Math.pow(1+ds.wacc,y);
+    FDCdesc[y]=FDCcomPerp[y]/discFactor[y];
+    cum[y]= y===0 ? FDCdesc[0] : cum[y-1]+FDCdesc[y];
+  }
+
+  const VPL=cum[5];
+  const viavel = VPL>0;
+
+  let paybackYear=null;
+  for(let y=0;y<=5;y++){ if(cum[y]<=0) paybackYear=y; }
+  let paybackLabel, paybackYears=null, paybackMonths=null;
+  if(paybackYear===null){
+    paybackLabel="Imediato"; paybackYears=0; paybackMonths=0;
+  }else if(paybackYear<5){
+    paybackMonths=Math.round(-cum[paybackYear]/FDCdesc[paybackYear+1]*12);
+    paybackYears=paybackYear;
+    paybackLabel=`${paybackYear} ano(s) e ${paybackMonths} mês(es)`;
+  }else{
+    paybackLabel="Não recupera no horizonte de 5 anos";
+  }
+
+  const cfArray=[FDCcomPerp[0],FDCcomPerp[1],FDCcomPerp[2],FDCcomPerp[3],FDCcomPerp[4],FDCcomPerp[5]];
+  const TIR=irr(cfArray);
+  const TIRM=mirr(cfArray, ds.wacc, ds.wacc);
+
+  return {ds,qty,rev,dev,revCom,taxTotal,ROL,CMV,outrosVar,gastoVar,contrib,headcount,gastoFixo,
+    EBITDA,LAIR,IR,CSLL,lucro,NCG,varNCG,FDCsemPerp,perpetuidade,FDCcomPerp,discFactor,FDCdesc,cum,
+    VPL,viavel,paybackLabel,paybackYears,paybackMonths,TIR,TIRM,PMR,PME,PMP};
+}
+
+/* ========================= FORMATAÇÃO ========================= */
+function money(v){ if(!isFinite(v)) return "—"; return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0}); }
+function moneyD(v){ if(!isFinite(v)) return "—"; return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:2}); }
+function pctFmt(v){ if(!isFinite(v)) return "—"; return (v*100).toLocaleString('pt-BR',{maximumFractionDigits:1})+"%"; }
+function numFmt(v){ if(!isFinite(v)) return "—"; return Math.round(v).toLocaleString('pt-BR'); }
+
+function getInputs(){
+  const coefRaw = parseFloat(document.getElementById('inCoef').value);
+  return {
+    price: parseFloat(document.getElementById('inPrice').value)||0,
+    qty1: parseFloat(document.getElementById('inQty1').value)||0,
+    growth: [2,3,4,5,6].map(y=>(parseFloat(document.getElementById('inG'+y).value)||0)/100),
+    coef: (isFinite(coefRaw) && coefRaw>=0) ? coefRaw : 1
+  };
+}
+
+/* Aplica o coeficiente de custo aos campos de custo da planilha (CAPEX, custo unitário/insumos e OPEX).
+   Não altera preço de venda, impostos, WACC nem os prazos de recebimento/estoque, que não são "custo". */
+function applyCostCoef(ds, coef){
+  if(coef===1) return ds;
+  return {
+    ...ds,
+    unitCost: ds.unitCost*coef,
+    capexInicial: ds.capexInicial*coef,
+    salarioBase: ds.salarioBase*coef,
+    opexVar:{
+      importUnit: ds.opexVar.importUnit*coef,
+      desembaracoUnit: ds.opexVar.desembaracoUnit*coef,
+      comissao: ds.opexVar.comissao*coef,
+      frete: ds.opexVar.frete*coef,
+      embalagem: ds.opexVar.embalagem*coef,
+      royalties: ds.opexVar.royalties*coef,
+      descontos: ds.opexVar.descontos*coef
+    }
+  };
+}
+
+/* ========================= GRÁFICO ========================= */
+function drawChart(canvas, cum, color){
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width=canvas.clientWidth*2, h=canvas.height=canvas.clientHeight*2;
+  ctx.clearRect(0,0,w,h);
+  const vals=[0,1,2,3,4,5].map(y=>cum[y]);
+  const min=Math.min(...vals,0), max=Math.max(...vals,0);
+  const pad=40*2;
+  const x=y=>pad+(w-2*pad)*(y/5);
+  const yv=v=>h-pad-(h-2*pad)*((v-min)/(max-min||1));
+  // zero line
+  ctx.strokeStyle="#c3ccd8"; ctx.lineWidth=2; ctx.beginPath();
+  ctx.moveTo(pad,yv(0)); ctx.lineTo(w-pad,yv(0)); ctx.stroke();
+  // curve
+  ctx.strokeStyle=color; ctx.lineWidth=4; ctx.beginPath();
+  vals.forEach((v,i)=>{ const px=x(i), py=yv(v); if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py); });
+  ctx.stroke();
+  // points + labels
+  ctx.font=(20)+"px Inter, Arial";
+  vals.forEach((v,i)=>{
+    const px=x(i), py=yv(v);
+    ctx.fillStyle=color;
+    ctx.beginPath(); ctx.arc(px,py,6,0,7); ctx.fill();
+    ctx.fillStyle="#344054";
+    ctx.fillText("Ano "+i, px-18, h-8);
+  });
+  // valor de cada ponto: acima do ponto se ele estiver na metade de baixo do gráfico, abaixo se estiver na metade de cima (evita cortar no topo)
+  ctx.font="700 18px Inter, Arial";
+  ctx.textAlign="center";
+  vals.forEach((v,i)=>{
+    const px=x(i), py=yv(v), above = py > (pad+(h-2*pad)/2);
+    ctx.fillStyle = v<0 ? "#b42318" : "#16794a";
+    ctx.fillText(moneyK(v), px, above? py-14 : py+26);
+  });
+  ctx.textAlign="left";
+}
+function moneyK(v){
+  const s = Math.abs(v)>=1000 ? (Math.abs(v)/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+"k" : Math.round(Math.abs(v)).toLocaleString('pt-BR');
+  return (v<0?"-R$ ":"R$ ")+s;
+}
+
+/* ========================= RENDER — VISÃO ÚNICA ========================= */
+function renderSingle(dsRaw){
+  const inputs=getInputs();
+  const ds=applyCostCoef(dsRaw, inputs.coef);
+  const r=computeModel(ds, inputs);
+  const color = "#16794a";
+
+  const rows=[1,2,3,4,5,6].map(y=>`
+    <tr>
+      <td>Ano ${y}</td>
+      <td>${numFmt(r.qty[y])}</td>
+      <td>${money(r.rev[y])}</td>
+      <td>${money(r.ROL[y])}</td>
+      <td>${money(r.gastoVar[y])}</td>
+      <td>${money(r.contrib[y])}</td>
+      <td>${money(r.gastoFixo[y])}</td>
+      <td>${money(r.EBITDA[y])}</td>
+      <td>${money(r.lucro[y])}</td>
+    </tr>`).join("");
+
+  const html=`
+    <div class="card">
+      <div class="scenario-title"><div class="chip ${ds.label==='Externa'?'ext':'int'}">${ds.label==='Externa'?'E':'I'}</div><h2 style="margin:0">Produção ${ds.label}</h2>
+        <span class="badge ${r.viavel?'badge-green':'badge-red'}" style="margin-left:auto">${r.viavel?'Viável':'Inviável'}</span>
+      </div>
+      <div class="grid5">
+        <div class="kpi"><div class="l">VPL</div><div class="v">${money(r.VPL)}</div></div>
+        <div class="kpi"><div class="l">Payback</div><div class="v" style="font-size:15px">${r.paybackLabel}</div></div>
+        <div class="kpi"><div class="l">TIR</div><div class="v">${pctFmt(r.TIR)}</div></div>
+        <div class="kpi"><div class="l">TIRM</div><div class="v">${pctFmt(r.TIRM)}</div></div>
+        <div class="kpi"><div class="l">Investimento inicial</div><div class="v" style="font-size:17px">${money(ds.capexInicial)}</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Fluxo de caixa descontado acumulado (payback)</h2>
+      <canvas id="chart_${ds.label}"></canvas>
+      <div class="small" style="margin-top:8px">A curva cruza zero no ponto de payback. Custo unitário considerado: ${moneyD(ds.unitCost)}/un.</div>
+      <div class="small" style="margin-top:14px;font-weight:700;color:var(--ink)">Fluxo de caixa descontado acumulado, ano a ano (começa negativo, pelo investimento inicial, até ficar positivo):</div>
+      <ul style="margin:8px 0 0;padding-left:0;list-style:none;display:grid;gap:6px">
+        ${[0,1,2,3,4,5].map(y=>`<li style="display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:4px 2px">
+          <span>Ano ${y}</span><b style="color:${r.cum[y]<0?'var(--red)':'var(--green)'}">${money(r.cum[y])}</b></li>`).join("")}
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Demonstrativo por ano</h2>
+      <div style="overflow:auto"><table>
+        <thead><tr><th>Período</th><th>Quantidade</th><th>Receita bruta</th><th>ROL</th><th>Custo variável</th><th>Margem contrib.</th><th>Gasto fixo</th><th>EBITDA</th><th>Lucro líquido</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </div>
+  `;
+  document.getElementById('singleView').innerHTML=html;
+  drawChart(document.getElementById('chart_'+ds.label), r.cum, color);
+}
+
+/* ========================= CONTROLE DE VISÃO ========================= */
+function renderAll(){
+  document.getElementById('singleView').classList.remove('hidden');
+  if(INTERNA) renderSingle(INTERNA);
+}
+
+function renderAssumptions(){
+  document.getElementById('assumpBox').innerHTML=`
+    <b>Produção Interna</b> — WACC: ${pctFmt(INTERNA.wacc)} · Devoluções: ${pctFmt(INTERNA.devolucaoRate)} ·
+    PIS: ${pctFmt(INTERNA.taxRates.pis)} · COFINS: ${pctFmt(INTERNA.taxRates.cofins)} ·
+    IR: ${pctFmt(INTERNA.irRate)} · CSLL: ${pctFmt(INTERNA.csllRate)} ·
+    Comissão: ${pctFmt(INTERNA.opexVar.comissao)} · Frete: ${pctFmt(INTERNA.opexVar.frete)} ·
+    Salário base MOD: ${moneyD(INTERNA.salarioBase)} (reajuste ${pctFmt(INTERNA.reajuste)}/ano) ·
+    Prazo recebimento: ${INTERNA.diasRecebimento} dias · Prazo estoque: ${INTERNA.diasEstoque} dias ·
+    Custo unitário: ${moneyD(INTERNA.unitCost)} · Investimento inicial: ${money(INTERNA.capexInicial)}<br><br>
+    Todos os valores acima foram lidos diretamente da planilha carregada.
+  `;
+}
+
+function currentMeta(type){ return FILES[type] || null; }
+function currentMeta(type){ return FILES[type] || null; }
+
+function updateTopButtons(){
+  document.getElementById('downloadIntTop').classList.toggle('hidden',!FILES.interna);
+  document.getElementById('prodLineTop').classList.toggle('hidden',!INTERNA);
+  document.getElementById('pngTop').classList.toggle('hidden',!INTERNA);
+  document.getElementById('downloadCurrentExcel').disabled = !FILES.interna;
+}
+
+function setAppReady(){
+  const ready=!!INTERNA;
+  document.getElementById('emptyState').classList.toggle('hidden',ready);
+  document.getElementById('appContent').classList.toggle('hidden',!ready);
+  if(ready){
+    const base=INTERNA.defaults||{};
+    document.getElementById('inPrice').value=base.price??20;
+    document.getElementById('inQty1').value=base.qty1??1000;
+    ['inG2','inG3','inG4','inG5','inG6'].forEach(id=>document.getElementById(id).value=xround((base.growth??0)*100,2));
+    renderAssumptions();
+    renderAll();
+  }
+  updateTopButtons();
+}
+
+async function loadCurrentFiles(){
+  const {data:i,error:ie}=await supabaseClient.from('leadsnare_interna').select('*').eq('is_current',true).order('created_at',{ascending:false}).limit(1).maybeSingle();
+  if(ie) throw ie;
+  FILES.interna=i; FILES.externa=null;
+  INTERNA=i?.dataset||null; EXTERNA=null;
+  if(i) setStatus(`Interna: ${i.file_name}`); else setStatus('Nenhuma planilha Lead Snare cadastrada ainda.');
+  setAppReady();
+}
+
+async function getRole(user){
+  const {data:p,error}=await supabaseClient.from('profiles').select('role').eq('id',user.id).maybeSingle();
+  if(!error && p?.role) return p.role;
+  return user.email===ADMIN_EMAIL?'admin':'user';
+}
+function formatAuthError(label, error){
+  if(!error) return '';
+  return `${label}: code=${error.code||'—'} | status=${error.status||'—'} | ${error.message||'Erro sem mensagem'}`;
+}
+
+async function login(){
+  const pw=document.getElementById('loginPassword').value;
+  const errEl=document.getElementById('loginErr');
+  errEl.textContent='';
+  if(!pw){errEl.textContent='Digite sua senha.';return;}
+  const btn=document.getElementById('loginBtn');
+  btn.disabled=true; btn.textContent='Entrando…';
+  try{
+    // Diagnóstico temporário: tentamos os dois usuários e mostramos o erro REAL retornado pelo Auth.
+    let adminResult=await supabaseClient.auth.signInWithPassword({email:ADMIN_EMAIL,password:pw});
+    if(!adminResult.error){
+      currentUser=adminResult.data.user;
+      currentRole=await getRole(currentUser);
+      await enterApp();
+      return;
+    }
+
+    await supabaseClient.auth.signOut();
+    let userResult=await supabaseClient.auth.signInWithPassword({email:USER_EMAIL,password:pw});
+    if(!userResult.error){
+      currentUser=userResult.data.user;
+      currentRole=await getRole(currentUser);
+      await enterApp();
+      return;
+    }
+
+    console.error('Supabase Auth — administrador:', adminResult.error);
+    console.error('Supabase Auth — usuário:', userResult.error);
+
+    const a=formatAuthError('Admin',adminResult.error);
+    const u=formatAuthError('Usuário',userResult.error);
+    const sameError = (adminResult.error?.code===userResult.error?.code && adminResult.error?.message===userResult.error?.message);
+
+    if(sameError){
+      errEl.textContent=`Erro Supabase: ${adminResult.error?.message||'não identificado'} [${adminResult.error?.code||'sem código'}]`;
+    }else{
+      errEl.textContent=`Falha de acesso. ${u}`;
+    }
+
+    // Mostra o diagnóstico completo abaixo da mensagem apenas nesta versão de teste.
+    const diag=document.getElementById('loginDiag');
+    if(diag){
+      diag.innerHTML=`<b>Diagnóstico</b><br>Projeto: zkqkoahdwzrjlmbmjcsv<br>${esc(a)}<br>${esc(u)}`;
+      diag.style.display='block';
+    }
+  }catch(e){
+    console.error('Exceção no login:',e);
+    errEl.textContent='Erro ao executar o login.';
+    const diag=document.getElementById('loginDiag');
+    if(diag){diag.textContent=`Exceção: ${e?.message||e}`;diag.style.display='block';}
+  }finally{
+    btn.disabled=false; btn.textContent='Entrar';
+  }
+}
+async function enterApp(){
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('userPill').textContent=`● ${roleLabel()}`;
+  document.getElementById('logoutBtn').classList.remove('hidden');
+  document.getElementById('adminPanel').classList.toggle('hidden',currentRole!=='admin');
+  if(currentRole==='admin') await loadHistory();
+  try{await loadCurrentFiles();}catch(e){setStatus('Erro ao carregar dados do Supabase: '+e.message);}
+}
+async function logout(){await supabaseClient.auth.signOut(); location.reload();}
+
+async function uploadOriginal(type,file){
+  if(currentRole!=='admin') throw new Error('Apenas o administrador pode carregar a planilha.');
+  if(!file) return;
+  setStatus('Lendo Produção Interna…');
+  const wb=await readWorkbookFile(file);
+  const ds=parseWorkbook(wb,'Interna');
+  const table='leadsnare_interna';
+  const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  const path=`${STORAGE_FOLDER}/${new Date().toISOString().replace(/[:.]/g,'-')}-${crypto.randomUUID()}-${safe}`;
+  const {error:upErr}=await supabaseClient.storage.from(STORAGE_BUCKET).upload(path,file,{contentType:file.type||'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',upsert:false});
+  if(upErr) throw upErr;
+  const {data:oldRows,error:oldErr}=await supabaseClient.from(table).select('id').eq('is_current',true);
+  if(oldErr) throw oldErr;
+  if(oldRows?.length){
+    const {error:uerr}=await supabaseClient.from(table).update({is_current:false}).eq('is_current',true);
+    if(uerr) throw uerr;
+  }
+  const {data:versions,error:vErr}=await supabaseClient.from(table).select('version').order('version',{ascending:false}).limit(1);
+  if(vErr) throw vErr;
+  const nextVersion=(versions?.[0]?.version||0)+1;
+  const {data:row,error:insErr}=await supabaseClient.from(table).insert({
+    version:nextVersion,file_name:file.name,storage_path:path,dataset:ds,
+    uploaded_by:currentUser.id,file_size:file.size,is_current:true
+  }).select().single();
+  if(insErr) throw insErr;
+  FILES.interna=row; INTERNA=ds;
+  await loadCurrentFiles();
+  await loadHistory();
+  setStatus('✓ Produção Interna atualizada com o Excel original salvo no Supabase.');
+}
+
+async function downloadOriginal(type){
+  const f=FILES[type]; if(!f){alert('Não existe planilha cadastrada.');return;}
+  setStatus('Baixando Excel original…');
+  const {data,error}=await supabaseClient.storage.from(STORAGE_BUCKET).download(f.storage_path);
+  if(error){alert('Erro ao baixar o Excel original: '+error.message);return;}
+  const url=URL.createObjectURL(data); const a=document.createElement('a'); a.href=url; a.download=f.file_name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  setStatus(`✓ Download concluído: ${f.file_name}`);
+}
+async function downloadSimulationExcel(type){
+  const f=FILES[type];
+  if(!f){alert('Não existe planilha cadastrada.');return;}
+
+  try{
+    setStatus('Preparando Excel da simulação…');
+
+    const {data,error}=await supabaseClient.storage.from(STORAGE_BUCKET).download(f.storage_path);
+    if(error) throw error;
+
+    const buffer=await data.arrayBuffer();
+    const wb=XLSX.read(new Uint8Array(buffer),{type:'array'});
+    const inputs=getInputs();
+
+    // Mantém o arquivo original no Supabase intacto.
+    // As alterações abaixo existem somente na cópia gerada para download.
+    const ws=wb.Sheets['Receita'];
+    if(ws){
+      ws['D19']={t:'n',v:Number(inputs.price)||0};
+      ws['D12']={t:'n',v:Number(inputs.qty1)||0};
+      ws['E13']={t:'n',v:Number(inputs.growth[0])||0};
+    }
+
+    // Registra todos os parâmetros usados pelo aplicativo, inclusive
+    // os crescimentos individuais e o coeficiente de custo.
+    const simRows=[
+      ['PARÂMETROS DE SIMULAÇÃO',''],
+      ['Parâmetro','Valor'],
+      ['Preço de venda (R$/un)',Number(inputs.price)||0],
+      ['Quantidade vendida no Ano 1 (un)',Number(inputs.qty1)||0],
+      ['Ano 2 (%)',Number(inputs.growth[0])*100],
+      ['Ano 3 (%)',Number(inputs.growth[1])*100],
+      ['Ano 4 (%)',Number(inputs.growth[2])*100],
+      ['Ano 5 (%)',Number(inputs.growth[3])*100],
+      ['Ano 6 (%)',Number(inputs.growth[4])*100],
+      ['Coeficiente de custo',Number(inputs.coef)||0]
+    ];
+    const simWs=XLSX.utils.aoa_to_sheet(simRows);
+    simWs['!cols']=[{wch:36},{wch:18}];
+    XLSX.utils.book_append_sheet(wb,simWs,'Simulação');
+
+    const baseName=(f.file_name||'Lead Snare.xlsx').replace(/\.xlsx$/i,'');
+    const modeLabel=type==='interna'?'Interna':'Externa';
+    const fileName=`${baseName} - Simulação ${modeLabel}.xlsx`;
+
+    XLSX.writeFile(wb,fileName);
+    setStatus(`✓ Download concluído: ${fileName}`);
+  }catch(err){
+    console.error(err);
+    alert('Erro ao gerar o Excel da simulação: '+(err.message||err));
+    setStatus('Erro ao gerar o Excel da simulação.');
+  }
+}
+async function deleteVersion(type,id){
+  if(currentRole!=='admin') return;
+  if(!confirm('Excluir esta versão do histórico? O arquivo original também será removido do Storage.')) return;
+  const {data:row,error:re}=await supabaseClient.from('leadsnare_interna').select('storage_path,is_current').eq('id',id).single();
+  if(re){alert(re.message);return;}
+  if(row.is_current){alert('A versão atual não pode ser excluída. Carregue uma nova versão primeiro.');return;}
+  const {error:de}=await supabaseClient.from('leadsnare_interna').delete().eq('id',id);
+  if(de){alert(de.message);return;}
+  const {error:se}=await supabaseClient.storage.from(STORAGE_BUCKET).remove([row.storage_path]);
+  if(se){console.warn(se);}
+  await loadHistory();
+  await loadCurrentFiles();
+}
+
+async function loadHistory(){
+  if(currentRole!=='admin') return;
+  const {data,error}=await supabaseClient.from('leadsnare_interna').select('id,version,file_name,file_size,created_at,is_current,storage_path').order('version',{ascending:false});
+  if(error){
+    document.getElementById('historyInt').innerHTML='<div class="small">Erro: '+esc(error.message)+'</div>';
+    return;
+  }
+  const current=data?.find(x=>x.is_current);
+  document.getElementById('adminIntMeta').innerHTML=current
+    ? `<span class="status-ok">Versão ${current.version} atual</span><br><b>${esc(current.file_name)}</b><br>${fmtDate(current.created_at)} · ${fileSize(current.file_size)}`
+    : 'Nenhuma versão atual.';
+  const hist=document.getElementById('historyInt');
+  hist.innerHTML=data?.length
+    ? `<details><summary>Histórico (${data.length} versões)</summary><div style="overflow:auto;margin-top:8px"><table><thead><tr><th>Versão</th><th>Arquivo original</th><th>Data</th><th>Tamanho</th><th></th></tr></thead><tbody>${data.map(x=>`<tr><td>v${x.version} ${x.is_current?'<b>(atual)</b>':''}</td><td>${esc(x.file_name)}</td><td>${fmtDate(x.created_at)}</td><td>${fileSize(x.file_size)}</td><td><button class="btn" onclick="downloadHistory(${x.id})">Baixar</button>${x.is_current?'':' <button class="btn danger" onclick="deleteVersion(\'interna\','+x.id+')">Excluir</button>'}</td></tr>`).join('')}</tbody></table></div></details>`
+    : '<div class="small">Sem histórico.</div>';
+}
+
+async function downloadHistory(id){
+  const {data,error}=await supabaseClient.from('leadsnare_interna').select('file_name,storage_path').eq('id',id).single();
+  if(error){alert(error.message);return;}
+  const {data:blob,error:be}=await supabaseClient.storage.from(STORAGE_BUCKET).download(data.storage_path);
+  if(be){alert(be.message);return;}
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=data.file_name;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+async function exportPNG(){
+  if(!window.html2canvas){alert('Biblioteca de exportação não carregada.');return;}
+  const target=document.getElementById('appContent'); if(!target||target.classList.contains('hidden')){alert('Carregue a planilha de Produção Interna para exportar a viabilidade.');return;}
+  const old=document.querySelector('.report-toolbar'); old?.classList.add('hidden');
+  try{const canvas=await html2canvas(target,{backgroundColor:'#f4f7fb',scale:2,useCORS:true}); const a=document.createElement('a'); a.download=`LeadSnare-Viabilidade-${new Date().toISOString().slice(0,10)}.png`; a.href=canvas.toDataURL('image/png'); a.click();}finally{old?.classList.remove('hidden');}
+}
+
+// Eventos
+const loginBtnEl=document.getElementById('loginBtn'),
+      loginPasswordEl=document.getElementById('loginPassword'),
+      logoutBtnEl=document.getElementById('logoutBtn');
+const adminUploadIntEl=document.getElementById('adminUploadInt'),
+      adminDownloadIntEl=document.getElementById('adminDownloadInt');
+const downloadIntTopEl=document.getElementById('downloadIntTop'),
+      prodLineTopEl=document.getElementById('prodLineTop'),
+      pngTopEl=document.getElementById('pngTop');
+const downloadCurrentExcelEl=document.getElementById('downloadCurrentExcel'),
+      exportPngEl=document.getElementById('exportPng');
+const fileInternaEl=document.getElementById('fileInterna');
+
+loginBtnEl.onclick=login;
+loginPasswordEl.addEventListener('keydown',e=>{if(e.key==='Enter')login();});
+logoutBtnEl.onclick=logout;
+
+const togglePasswordEl=document.getElementById('togglePassword');
+togglePasswordEl.onclick=()=>{
+  const visible=loginPasswordEl.type==='text';
+  loginPasswordEl.type=visible?'password':'text';
+  togglePasswordEl.style.opacity=visible?'0.65':'1';
+  togglePasswordEl.setAttribute('aria-label',visible?'Mostrar senha':'Ocultar senha');
+  togglePasswordEl.title=visible?'Mostrar senha':'Ocultar senha';
+};
+
+adminUploadIntEl.onclick=()=>fileInternaEl.click();
+fileInternaEl.onchange=e=>uploadOriginal('interna',e.target.files[0]).catch(err=>alert('Erro ao carregar a planilha: '+err.message));
+adminDownloadIntEl.onclick=()=>downloadOriginal('interna');
+downloadIntTopEl.onclick=()=>downloadSimulationExcel('interna');
+downloadCurrentExcelEl.onclick=()=>downloadSimulationExcel('interna');
+exportPngEl.onclick=exportPNG;
+pngTopEl.onclick=exportPNG;
+
+// Popup da linha de produção: substitua prod.png no GitHub pela imagem definitiva.
+function openProductionPopup(){
+  document.getElementById('productionModal').classList.remove('hidden');
+}
+function closeProductionPopup(){
+  document.getElementById('productionModal').classList.add('hidden');
+}
+prodLineTopEl.onclick=openProductionPopup;
+document.getElementById('productionModal').addEventListener('click',e=>{
+  if(e.target.id==='productionModal') closeProductionPopup();
+});
+
+// Popup da nota: o texto é carregado de nota.txt para facilitar a edição no GitHub.
+async function openQuantityNote(){
+  const modal=document.getElementById('quantityNoteModal');
+  const text=document.getElementById('quantityNoteText');
+  modal.classList.remove('hidden');
+  text.textContent='Carregando nota…';
+  try{
+    const response=await fetch('nota.txt',{cache:'no-store'});
+    if(!response.ok) throw new Error('nota.txt não encontrado');
+    text.textContent=await response.text();
+  }catch(e){
+    text.textContent='Texto provisório da nota. Edite o arquivo nota.txt no GitHub para substituir esta mensagem.';
+  }
+}
+function closeQuantityNote(){
+  document.getElementById('quantityNoteModal').classList.add('hidden');
+}
+document.getElementById('qtyNoteBtn').onclick=openQuantityNote;
+document.getElementById('quantityNoteModal').addEventListener('click',e=>{
+  if(e.target.id==='quantityNoteModal') closeQuantityNote();
+});
+
+// Se já houver sessão Supabase, entra sem pedir senha novamente.
+(async()=>{
+  const {data}=await supabaseClient.auth.getSession();
+  if(data.session){
+    currentUser=data.session.user;
+    currentRole=await getRole(currentUser);
+    await enterApp();
+  }
+})();
+
+</script>
+</body></html>
