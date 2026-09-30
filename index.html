@@ -68,6 +68,17 @@ details summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--primar
 .note-trigger:hover{background:#0d4678}
 .note-modal-text{white-space:pre-wrap;line-height:1.6;font-size:14px;color:#344054;background:#f8fafc;border:1px solid #dfe5ee;border-radius:10px;padding:14px;min-height:100px}
 .modal-close{margin-top:12px;background:#667085!important}
+ .channel-head,.channel-row{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:12px;align-items:center}
+ .channel-head{padding:8px 10px;background:#f3f5f8;border-radius:10px 10px 0 0;color:#344054;font-size:12px}
+ .channel-row{padding:7px 10px;border-bottom:1px solid var(--line)}
+ .channel-input{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:14px}
+ .channel-sum{padding:10px;border-radius:9px;text-align:center;font-weight:800;background:#ecfdf3;color:#027a48;border:1px solid #abefc6}
+ .channel-sum.warn{background:#fffaeb;color:#b54708;border-color:#fedf89}
+ .channel-warning{margin-top:10px;padding:9px 11px;border-radius:9px;background:#fff5f5;color:#b42318;border:1px solid #fecdca;font-size:12px;font-weight:700}
+ .iframe-modal{max-width:980px!important}
+ .info-frame{width:100%;height:65vh;border:1px solid var(--line);border-radius:10px;background:#fff}
+ @media(max-width:760px){.channel-head,.channel-row{grid-template-columns:1fr 1fr}.channel-head div:nth-child(3),.channel-row div:nth-child(3){grid-column:2}.info-frame{height:70vh}}
+
 </style>
 </head><body><div id="authScreen" class="auth-screen">
   <div class="auth-box">
@@ -131,11 +142,49 @@ details summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--primar
 
     <div class="card">
       <h2>Parâmetros de simulação</h2>
-      <div class="small" style="margin-bottom:14px">Estes parâmetros são aplicados às duas estruturas de custo (interna e externa), para comparar o mesmo cenário de mercado.</div>
+      <div class="small" style="margin-bottom:14px">Ajuste a quantidade, os canais de venda, os preços por canal e o crescimento anual. Os cálculos usam a mesma lógica da planilha de viabilidade.</div>
+
       <div class="grid3">
-        <div><label>Preço de venda (R$/un)</label><input id="inPrice" type="number" min="0" step="0.01" value="20"></div>
-        <div><label>Quantidade vendida no Ano 1 (un)<button id="qtyNoteBtn" class="note-trigger" type="button" title="Ver nota">i</button></label><input id="inQty1" type="number" min="0" step="1" value="1000"></div>
+        <div>
+          <label>Quantidade vendida no Ano 1 (un)
+            <button id="qtyNoteBtn" class="note-trigger" type="button" title="Ver informação sobre quantidade">i</button>
+          </label>
+          <input id="inQty1" type="number" min="0" step="1" value="1000">
+        </div>
+        <div>
+          <label>Preço médio ponderado (R$/un)
+            <button id="priceNoteBtn" class="note-trigger" type="button" title="Ver informação sobre preço">i</button>
+          </label>
+          <input id="inPrice" type="number" min="0" step="0.01" value="0" readonly style="background:#f3f5f8">
+        </div>
+        <div>
+          <label>Soma dos canais</label>
+          <div id="channelSumBadge" class="channel-sum">100%</div>
+        </div>
       </div>
+
+      <div class="channel-head">
+        <div><b>Canal de venda</b></div>
+        <div><b>Participação</b></div>
+        <div><b>Preço (R$/un)</b></div>
+      </div>
+      <div class="channel-row">
+        <div><b>Distribuidor</b></div>
+        <div><input id="inChDist" class="channel-input" type="number" min="0" max="100" step="0.1" value="75"></div>
+        <div><input id="inPriceDist" class="channel-input" type="number" min="0" step="0.01" value="1295"></div>
+      </div>
+      <div class="channel-row">
+        <div><b>Órgão Público</b></div>
+        <div><input id="inChPub" class="channel-input" type="number" min="0" max="100" step="0.1" value="25"></div>
+        <div><input id="inPricePub" class="channel-input" type="number" min="0" step="0.01" value="1850"></div>
+      </div>
+      <div class="channel-row">
+        <div><b>Venda Direta</b></div>
+        <div><input id="inChDirect" class="channel-input" type="number" min="0" max="100" step="0.1" value="0"></div>
+        <div><input id="inPriceDirect" class="channel-input" type="number" min="0" step="0.01" value="0"></div>
+      </div>
+      <div id="channelWarning" class="channel-warning hidden">A soma dos canais precisa ser exatamente 100% para calcular a receita.</div>
+
       <div class="small" style="margin:14px 0 6px">Crescimento (ou retração, com valor negativo) de cada ano em relação ao anterior:</div>
       <div class="grid5">
         <div><label>Ano 2 (%)</label><input id="inG2" type="number" step="0.1" value="50"></div>
@@ -144,8 +193,9 @@ details summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--primar
         <div><label>Ano 5 (%)</label><input id="inG5" type="number" step="0.1" value="50"></div>
         <div><label>Ano 6 (%)</label><input id="inG6" type="number" step="0.1" value="50"></div>
       </div>
-      <div class="small" style="margin:14px 0 6px">Coeficiente de custo — multiplica CAPEX, custo unitário e OPEX das duas planilhas.</div>
+      <div class="small" style="margin:14px 0 6px">Coeficiente de custo — multiplica CAPEX, custo unitário e OPEX.</div>
       <div class="grid3"><div><label>Coeficiente de custo</label><input id="inCoef" type="number" min="0" step="0.01" value="1"></div></div>
+    </div>
     </div>
 
     <div class="card">
@@ -159,22 +209,28 @@ details summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--primar
     </div>
   </div>
 </div>
-<!-- Popup da linha de produção -->
+<!-- Popups com conteúdo mantido em HTMLs editáveis no GitHub -->
 <div id="productionModal" class="modal-bg hidden">
-  <div class="modal-box modal-wide">
+  <div class="modal-box modal-wide iframe-modal">
     <h3>Linha de produção — Lead Snare</h3>
-    <div class="small" style="margin-bottom:10px">Imagem provisória. Substitua o arquivo <b>prod.png</b> no GitHub pela imagem definitiva.</div>
-    <img class="prod-image" src="prod.png" alt="Possível linha de produção do Lead Snare">
+    <iframe id="productionFrame" class="info-frame" src="processo.html" title="Processo produtivo"></iframe>
     <button class="modal-close" type="button" onclick="closeProductionPopup()">Fechar</button>
   </div>
 </div>
 
-<!-- Popup da nota da quantidade -->
 <div id="quantityNoteModal" class="modal-bg hidden">
-  <div class="modal-box">
-    <h3>Nota sobre a quantidade vendida</h3>
-    <div id="quantityNoteText" class="note-modal-text">Carregando nota…</div>
+  <div class="modal-box modal-wide iframe-modal">
+    <h3>Informações sobre quantidade</h3>
+    <iframe id="quantityFrame" class="info-frame" src="quantidade.html" title="Informações sobre quantidade"></iframe>
     <button class="modal-close" type="button" onclick="closeQuantityNote()">Fechar</button>
+  </div>
+</div>
+
+<div id="priceInfoModal" class="modal-bg hidden">
+  <div class="modal-box modal-wide iframe-modal">
+    <h3>Informações sobre preço</h3>
+    <iframe id="priceFrame" class="info-frame" src="preco.html" title="Informações sobre preço"></iframe>
+    <button class="modal-close" type="button" onclick="closePriceInfo()">Fechar</button>
   </div>
 </div>
 
@@ -214,9 +270,21 @@ function parseWorkbook(wb, label){
       processes.push({ nome: desc || ('Processo '+col), mod, cap });
     }
   });
-  const price = cellNum(wb,'Receita','D19',20);
   const qty1 = cellNum(wb,'Receita','D12',0);
   const growth = cellNum(wb,'Receita','E13',0);
+  const channels = {
+    distribuidor: cellNum(wb,'Receita','C14',0),
+    publico: cellNum(wb,'Receita','C15',0),
+    direta: cellNum(wb,'Receita','C16',0)
+  };
+  const channelPrices = {
+    distribuidor: cellNum(wb,'Receita','D19',0),
+    publico: cellNum(wb,'Receita','D20',0),
+    direta: cellNum(wb,'Receita','D21',0)
+  };
+  const price = channels.distribuidor*channelPrices.distribuidor +
+                channels.publico*channelPrices.publico +
+                channels.direta*channelPrices.direta;
   const wacc = cellNum(wb,'EV','C10',0.20475);
   const g = cellNum(wb,'EV','C11',0);
   const devolucaoRate = cellNum(wb,'EV','C18',0);
@@ -245,6 +313,7 @@ function parseWorkbook(wb, label){
     taxRates: { ipi, icms, pis, cofins }, irRate, csllRate,
     opexVar: { importUnit, desembaracoUnit, comissao, frete, embalagem, royalties, descontos },
     wacc, g, diasRecebimento, diasEstoque, diasPagamento,
+    channels, channelPrices,
     defaults: { price, qty1, growth }
   };
 }
@@ -301,6 +370,7 @@ function computeModel(ds, inputs){
   const price = Math.max(inputs.price,0);
   const qty1 = Math.max(inputs.qty1,0);
   const growth = inputs.growth;
+  const channels = inputs.channels || ds.channels || {distribuidor:1,publico:0,direta:0};
 
   const qty={}, rev={}, dev={}, revCom={}, taxTotal={}, ROL={};
   const CMV={}, outrosVar={}, gastoVar={}, contrib={};
@@ -310,7 +380,12 @@ function computeModel(ds, inputs){
   for(let y=1;y<=6;y++) qty[y] = y===1 ? qty1 : qty[y-1]*(1+growth[y-2]);
 
   for(let y=1;y<=6;y++){
-    rev[y]=qty[y]*price;
+    const chDist=qty[y]*channels.distribuidor;
+    const chPub=qty[y]*channels.publico;
+    const chDirect=qty[y]*channels.direta;
+    rev[y]=chDist*(inputs.channelPrices?.distribuidor||0) +
+           chPub*(inputs.channelPrices?.publico||0) +
+           chDirect*(inputs.channelPrices?.direta||0);
     dev[y]=rev[y]*ds.devolucaoRate;
     revCom[y]=rev[y]-dev[y];
     const ipi=xround(ds.taxRates.ipi*revCom[y],0);
@@ -417,12 +492,40 @@ function numFmt(v){ if(!isFinite(v)) return "—"; return Math.round(v).toLocale
 
 function getInputs(){
   const coefRaw = parseFloat(document.getElementById('inCoef').value);
+  const channels = {
+    distribuidor: Math.max(parseFloat(document.getElementById('inChDist').value)||0,0)/100,
+    publico: Math.max(parseFloat(document.getElementById('inChPub').value)||0,0)/100,
+    direta: Math.max(parseFloat(document.getElementById('inChDirect').value)||0,0)/100
+  };
+  const channelPrices = {
+    distribuidor: Math.max(parseFloat(document.getElementById('inPriceDist').value)||0,0),
+    publico: Math.max(parseFloat(document.getElementById('inPricePub').value)||0,0),
+    direta: Math.max(parseFloat(document.getElementById('inPriceDirect').value)||0,0)
+  };
+  const price = channels.distribuidor*channelPrices.distribuidor +
+                channels.publico*channelPrices.publico +
+                channels.direta*channelPrices.direta;
   return {
-    price: parseFloat(document.getElementById('inPrice').value)||0,
+    price,
     qty1: parseFloat(document.getElementById('inQty1').value)||0,
+    channels,
+    channelPrices,
     growth: [2,3,4,5,6].map(y=>(parseFloat(document.getElementById('inG'+y).value)||0)/100),
     coef: (isFinite(coefRaw) && coefRaw>=0) ? coefRaw : 1
   };
+}
+function updateChannelUI(){
+  const inputs=getInputs();
+  const sum=inputs.channels.distribuidor+inputs.channels.publico+inputs.channels.direta;
+  const pct=sum*100;
+  const badge=document.getElementById('channelSumBadge');
+  const warning=document.getElementById('channelWarning');
+  badge.textContent=pct.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';
+  const valid=Math.abs(pct-100)<0.01;
+  badge.classList.toggle('warn',!valid);
+  warning.classList.toggle('hidden',valid);
+  document.getElementById('inPrice').value=isFinite(inputs.price)?inputs.price.toFixed(2):'0.00';
+  return valid;
 }
 
 /* Aplica o coeficiente de custo aos campos de custo da planilha (CAPEX, custo unitário/insumos e OPEX).
@@ -524,7 +627,7 @@ function renderSingle(dsRaw){
     <div class="card">
       <h2>Fluxo de caixa descontado acumulado (payback)</h2>
       <canvas id="chart_${ds.label}"></canvas>
-      <div class="small" style="margin-top:8px">A curva cruza zero no ponto de payback. Custo unitário considerado: ${moneyD(ds.unitCost)}/un.</div>
+      <div class="small" style="margin-top:8px">A curva cruza zero no ponto de payback. Custo unitário considerado: ${moneyD(ds.unitCost)}/un. Preço médio ponderado: ${moneyD(inputs.price)}/un.</div>
       <div class="small" style="margin-top:14px;font-weight:700;color:var(--ink)">Fluxo de caixa descontado acumulado, ano a ano (começa negativo, pelo investimento inicial, até ficar positivo):</div>
       <ul style="margin:8px 0 0;padding-left:0;list-style:none;display:grid;gap:6px">
         ${[0,1,2,3,4,5].map(y=>`<li style="display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:4px 2px">
@@ -547,7 +650,17 @@ function renderSingle(dsRaw){
 /* ========================= CONTROLE DE VISÃO ========================= */
 function renderAll(){
   document.getElementById('singleView').classList.remove('hidden');
-  if(INTERNA) renderSingle(INTERNA);
+  if(!INTERNA) return;
+  const valid=updateChannelUI();
+  if(!valid){
+    document.getElementById('singleView').innerHTML=`
+      <div class="card">
+        <h2 style="margin-bottom:8px">Ajuste os canais de venda</h2>
+        <div class="small">A soma das participações de Distribuidor, Órgão Público e Venda Direta precisa ser exatamente 100%.</div>
+      </div>`;
+    return;
+  }
+  renderSingle(INTERNA);
 }
 
 function renderAssumptions(){
@@ -564,7 +677,6 @@ function renderAssumptions(){
 }
 
 function currentMeta(type){ return FILES[type] || null; }
-function currentMeta(type){ return FILES[type] || null; }
 
 function updateTopButtons(){
   document.getElementById('downloadIntTop').classList.toggle('hidden',!FILES.interna);
@@ -579,9 +691,17 @@ function setAppReady(){
   document.getElementById('appContent').classList.toggle('hidden',!ready);
   if(ready){
     const base=INTERNA.defaults||{};
-    document.getElementById('inPrice').value=base.price??20;
+    const ch=INTERNA.channels||{distribuidor:.75,publico:.25,direta:0};
+    const cp=INTERNA.channelPrices||{distribuidor:1295,publico:1850,direta:0};
     document.getElementById('inQty1').value=base.qty1??1000;
+    document.getElementById('inChDist').value=xround((ch.distribuidor||0)*100,2);
+    document.getElementById('inChPub').value=xround((ch.publico||0)*100,2);
+    document.getElementById('inChDirect').value=xround((ch.direta||0)*100,2);
+    document.getElementById('inPriceDist').value=cp.distribuidor??0;
+    document.getElementById('inPricePub').value=cp.publico??0;
+    document.getElementById('inPriceDirect').value=cp.direta??0;
     ['inG2','inG3','inG4','inG5','inG6'].forEach(id=>document.getElementById(id).value=xround((base.growth??0)*100,2));
+    updateChannelUI();
     renderAssumptions();
     renderAll();
   }
@@ -649,7 +769,7 @@ async function login(){
     // Mostra o diagnóstico completo abaixo da mensagem apenas nesta versão de teste.
     const diag=document.getElementById('loginDiag');
     if(diag){
-      diag.innerHTML=`<b>Diagnóstico</b><br>Projeto: zkqkoahdwzrjlmbmjcsv<br>${esc(a)}<br>${esc(u)}`;
+      diag.innerHTML=`<b>Diagnóstico</b><br>Projeto: kpeokojnjrmqwxlloxkd<br>${esc(a)}<br>${esc(u)}`;
       diag.style.display='block';
     }
   }catch(e){
@@ -728,18 +848,26 @@ async function downloadSimulationExcel(type){
     // As alterações abaixo existem somente na cópia gerada para download.
     const ws=wb.Sheets['Receita'];
     if(ws){
-      ws['D19']={t:'n',v:Number(inputs.price)||0};
       ws['D12']={t:'n',v:Number(inputs.qty1)||0};
+      ws['C14']={t:'n',v:Number(inputs.channels.distribuidor)||0};
+      ws['C15']={t:'n',v:Number(inputs.channels.publico)||0};
+      ws['C16']={t:'n',v:Number(inputs.channels.direta)||0};
+      ws['D19']={t:'n',v:Number(inputs.channelPrices.distribuidor)||0};
+      ws['D20']={t:'n',v:Number(inputs.channelPrices.publico)||0};
+      ws['D21']={t:'n',v:Number(inputs.channelPrices.direta)||0};
       ws['E13']={t:'n',v:Number(inputs.growth[0])||0};
     }
 
-    // Registra todos os parâmetros usados pelo aplicativo, inclusive
-    // os crescimentos individuais e o coeficiente de custo.
     const simRows=[
-      ['PARÂMETROS DE SIMULAÇÃO',''],
-      ['Parâmetro','Valor'],
-      ['Preço de venda (R$/un)',Number(inputs.price)||0],
+      ['PARÂMETROS DE SIMULAÇÃO','Valor'],
       ['Quantidade vendida no Ano 1 (un)',Number(inputs.qty1)||0],
+      ['Distribuidor (%)',Number(inputs.channels.distribuidor)*100],
+      ['Órgão Público (%)',Number(inputs.channels.publico)*100],
+      ['Venda Direta (%)',Number(inputs.channels.direta)*100],
+      ['Preço Distribuidor (R$/un)',Number(inputs.channelPrices.distribuidor)||0],
+      ['Preço Órgão Público (R$/un)',Number(inputs.channelPrices.publico)||0],
+      ['Preço Venda Direta (R$/un)',Number(inputs.channelPrices.direta)||0],
+      ['Preço médio ponderado (R$/un)',Number(inputs.price)||0],
       ['Ano 2 (%)',Number(inputs.growth[0])*100],
       ['Ano 3 (%)',Number(inputs.growth[1])*100],
       ['Ano 4 (%)',Number(inputs.growth[2])*100],
@@ -845,9 +973,19 @@ downloadCurrentExcelEl.onclick=()=>downloadSimulationExcel('interna');
 exportPngEl.onclick=exportPNG;
 pngTopEl.onclick=exportPNG;
 
-// Popup da linha de produção: substitua prod.png no GitHub pela imagem definitiva.
+['inQty1','inChDist','inChPub','inChDirect','inPriceDist','inPricePub','inPriceDirect','inG2','inG3','inG4','inG5','inG6','inCoef']
+  .forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('input',()=>{
+      updateChannelUI();
+      if(INTERNA) renderAll();
+    });
+  });
+
+// Popups: o conteúdo fica em HTMLs separados para facilitar edição no GitHub.
 function openProductionPopup(){
   document.getElementById('productionModal').classList.remove('hidden');
+  document.getElementById('productionFrame').src='processo.html?v='+Date.now();
 }
 function closeProductionPopup(){
   document.getElementById('productionModal').classList.add('hidden');
@@ -857,19 +995,9 @@ document.getElementById('productionModal').addEventListener('click',e=>{
   if(e.target.id==='productionModal') closeProductionPopup();
 });
 
-// Popup da nota: o texto é carregado de nota.txt para facilitar a edição no GitHub.
-async function openQuantityNote(){
-  const modal=document.getElementById('quantityNoteModal');
-  const text=document.getElementById('quantityNoteText');
-  modal.classList.remove('hidden');
-  text.textContent='Carregando nota…';
-  try{
-    const response=await fetch('nota.txt',{cache:'no-store'});
-    if(!response.ok) throw new Error('nota.txt não encontrado');
-    text.textContent=await response.text();
-  }catch(e){
-    text.textContent='Texto provisório da nota. Edite o arquivo nota.txt no GitHub para substituir esta mensagem.';
-  }
+function openQuantityNote(){
+  document.getElementById('quantityNoteModal').classList.remove('hidden');
+  document.getElementById('quantityFrame').src='quantidade.html?v='+Date.now();
 }
 function closeQuantityNote(){
   document.getElementById('quantityNoteModal').classList.add('hidden');
@@ -877,6 +1005,18 @@ function closeQuantityNote(){
 document.getElementById('qtyNoteBtn').onclick=openQuantityNote;
 document.getElementById('quantityNoteModal').addEventListener('click',e=>{
   if(e.target.id==='quantityNoteModal') closeQuantityNote();
+});
+
+function openPriceInfo(){
+  document.getElementById('priceInfoModal').classList.remove('hidden');
+  document.getElementById('priceFrame').src='preco.html?v='+Date.now();
+}
+function closePriceInfo(){
+  document.getElementById('priceInfoModal').classList.add('hidden');
+}
+document.getElementById('priceNoteBtn').onclick=openPriceInfo;
+document.getElementById('priceInfoModal').addEventListener('click',e=>{
+  if(e.target.id==='priceInfoModal') closePriceInfo();
 });
 
 // Se já houver sessão Supabase, entra sem pedir senha novamente.
